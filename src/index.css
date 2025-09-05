@@ -29,6 +29,32 @@ All colors MUST be HSL.
     --accent: 210 40% 96.1%;
     --accent-foreground: 222.2 47.4% 11.2%;
 
+    /* Network-specific colors */
+    --yello-primary: 120 60% 40%;
+    --yello-secondary: 120 60% 95%;
+    --yello-foreground: 0 0% 100%;
+
+    --telecel-primary: 220 85% 50%;
+    --telecel-secondary: 220 85% 95%;
+    --telecel-foreground: 0 0% 100%;
+
+    --airteltigo-primary: 25 85% 55%;
+    --airteltigo-secondary: 25 85% 95%;
+    --airteltigo-foreground: 0 0% 100%;
+
+    /* Gradients */
+    --gradient-yello: linear-gradient(135deg, hsl(var(--yello-primary)), hsl(120 70% 30%));
+    --gradient-telecel: linear-gradient(135deg, hsl(var(--telecel-primary)), hsl(220 90% 40%));
+    --gradient-airteltigo: linear-gradient(135deg, hsl(var(--airteltigo-primary)), hsl(25 90% 45%));
+
+    /* Shadows */
+    --shadow-yello: 0 10px 30px -10px hsl(var(--yello-primary) / 0.3);
+    --shadow-telecel: 0 10px 30px -10px hsl(var(--telecel-primary) / 0.3);
+    --shadow-airteltigo: 0 10px 30px -10px hsl(var(--airteltigo-primary) / 0.3);
+
+    /* Animations */
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
 

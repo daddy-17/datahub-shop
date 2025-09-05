@@ -52,6 +52,21 @@ export default {
 					DEFAULT: 'hsl(var(--card))',
 					foreground: 'hsl(var(--card-foreground))'
 				},
+				yello: {
+					DEFAULT: 'hsl(var(--yello-primary))',
+					secondary: 'hsl(var(--yello-secondary))',
+					foreground: 'hsl(var(--yello-foreground))'
+				},
+				telecel: {
+					DEFAULT: 'hsl(var(--telecel-primary))',
+					secondary: 'hsl(var(--telecel-secondary))',
+					foreground: 'hsl(var(--telecel-foreground))'
+				},
+				airteltigo: {
+					DEFAULT: 'hsl(var(--airteltigo-primary))',
+					secondary: 'hsl(var(--airteltigo-secondary))',
+					foreground: 'hsl(var(--airteltigo-foreground))'
+				},
 				sidebar: {
 					DEFAULT: 'hsl(var(--sidebar-background))',
 					foreground: 'hsl(var(--sidebar-foreground))',
