@@ -14,13 +14,158 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      data_bundles: {
+        Row: {
+          capacity: string
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          network: string
+          price: number
+          validity: string | null
+        }
+        Insert: {
+          capacity: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          network: string
+          price: number
+          validity?: string | null
+        }
+        Update: {
+          capacity?: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          network?: string
+          price?: number
+          validity?: string | null
+        }
+        Relationships: []
+      }
+      orders: {
+        Row: {
+          amount: number
+          bundle_id: string
+          created_at: string | null
+          id: string
+          receiver_phone: string
+          status: string | null
+          transaction_id: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          bundle_id: string
+          created_at?: string | null
+          id?: string
+          receiver_phone: string
+          status?: string | null
+          transaction_id?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          bundle_id?: string
+          created_at?: string | null
+          id?: string
+          receiver_phone?: string
+          status?: string | null
+          transaction_id?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orders_bundle_id_fkey"
+            columns: ["bundle_id"]
+            isOneToOne: false
+            referencedRelation: "data_bundles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          created_at: string | null
+          full_name: string | null
+          id: string
+          is_admin: boolean | null
+          phone_number: string | null
+          updated_at: string | null
+          user_id: string
+          wallet_balance: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          full_name?: string | null
+          id?: string
+          is_admin?: boolean | null
+          phone_number?: string | null
+          updated_at?: string | null
+          user_id: string
+          wallet_balance?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          full_name?: string | null
+          id?: string
+          is_admin?: boolean | null
+          phone_number?: string | null
+          updated_at?: string | null
+          user_id?: string
+          wallet_balance?: number | null
+        }
+        Relationships: []
+      }
+      wallet_transactions: {
+        Row: {
+          amount: number
+          created_at: string | null
+          description: string
+          id: string
+          reference: string | null
+          type: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string | null
+          description: string
+          id?: string
+          reference?: string | null
+          type: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          description?: string
+          id?: string
+          reference?: string | null
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      update_wallet_balance: {
+        Args: {
+          p_amount: number
+          p_description: string
+          p_reference?: string
+          p_type: string
+          p_user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never
