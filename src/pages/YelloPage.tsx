@@ -1,18 +1,45 @@
+import { useState, useEffect } from "react";
 import BundleCard from "@/components/BundleCard";
 import Navbar from "@/components/Navbar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { supabase } from "@/integrations/supabase/client";
 
-// Mock data for Yello bundles
-const yelloBundles = [
-  { id: "1", capacity: "1GB", price: 5, network: "yello" as const, validity: "7 days" },
-  { id: "2", capacity: "2GB", price: 9, network: "yello" as const, validity: "14 days" },
-  { id: "3", capacity: "5GB", price: 20, network: "yello" as const, validity: "30 days" },
-  { id: "4", capacity: "10GB", price: 35, network: "yello" as const, validity: "30 days" },
-  { id: "5", capacity: "20GB", price: 60, network: "yello" as const, validity: "30 days" },
-  { id: "6", capacity: "50GB", price: 120, network: "yello" as const, validity: "30 days" },
-];
+interface Bundle {
+  id: string;
+  capacity: string;
+  price: number;
+  network: "yello" | "telecel" | "airteltigo";
+  validity: string;
+}
 
 export default function YelloPage() {
+  const [bundles, setBundles] = useState<Bundle[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchBundles();
+  }, []);
+
+  const fetchBundles = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("data_bundles")
+        .select("*")
+        .eq("network", "yello")
+        .eq("is_active", true)
+        .order("price");
+
+      if (error) throw error;
+      setBundles(data?.map(bundle => ({
+        ...bundle,
+        network: bundle.network as "yello" | "telecel" | "airteltigo"
+      })) || []);
+    } catch (error) {
+      console.error("Error fetching bundles:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
   return (
     <div className="min-h-screen bg-gradient-to-br from-yello-secondary to-background">
       <Navbar />
@@ -33,17 +60,27 @@ export default function YelloPage() {
         </div>
 
         {/* Bundle Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {yelloBundles.map((bundle) => (
-            <BundleCard
-              key={bundle.id}
-              id={bundle.id}
-              capacity={bundle.capacity}
-              price={bundle.price}
-              network={bundle.network}
-              validity={bundle.validity}
-            />
-          ))}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+          {loading ? (
+            <div className="col-span-full text-center py-8">
+              <div className="text-lg">Loading bundles...</div>
+            </div>
+          ) : bundles.length === 0 ? (
+            <div className="col-span-full text-center py-8">
+              <div className="text-lg">No bundles available</div>
+            </div>
+          ) : (
+            bundles.map((bundle) => (
+              <BundleCard
+                key={bundle.id}
+                id={bundle.id}
+                capacity={bundle.capacity}
+                price={bundle.price}
+                network={bundle.network}
+                validity={bundle.validity}
+              />
+            ))
+          )}
         </div>
 
         {/* Info Section */}

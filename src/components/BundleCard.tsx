@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChevronDown, ChevronUp } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface BundleCardProps {
   id: string;
@@ -29,13 +30,29 @@ export default function BundleCard({ id, capacity, price, network, validity = "3
     }
     
     setIsProcessing(true);
-    // TODO: Integrate with DataMart API for purchase
-    setTimeout(() => {
-      alert(`Purchase request sent for ${phoneNumber}!`);
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('purchase-bundle', {
+        body: {
+          bundleId: id,
+          receiverPhone: phoneNumber,
+        }
+      });
+
+      if (error) throw error;
+
+      if (data.success) {
+        alert(`Bundle purchase successful! Order ID: ${data.orderId}`);
+        setIsExpanded(false);
+        setPhoneNumber("");
+      } else {
+        alert(data.error || "Purchase failed");
+      }
+    } catch (error: any) {
+      alert(error.message || "Purchase failed");
+    } finally {
       setIsProcessing(false);
-      setIsExpanded(false);
-      setPhoneNumber("");
-    }, 2000);
+    }
   };
 
   const networkStyles = {
