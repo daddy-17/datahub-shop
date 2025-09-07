@@ -142,32 +142,64 @@ export default function DashboardPage() {
 
     setIsTopUpLoading(true);
     try {
-      const { error } = await supabase.rpc("update_wallet_balance", {
-        p_user_id: user.id,
-        p_amount: parseFloat(topUpAmount),
-        p_type: "credit",
-        p_description: "Wallet top-up",
-        p_reference: `TOPUP_${Date.now()}`,
+      const { data, error } = await supabase.functions.invoke("paystack-topup", {
+        body: {
+          amount: parseFloat(topUpAmount),
+          email: user.email,
+        },
       });
 
       if (error) throw error;
 
-      toast({
-        title: "Success",
-        description: `₵${topUpAmount} added to your wallet`,
-      });
+      if (data?.success && data?.data?.authorization_url) {
+        // Open Paystack payment page in new tab
+        window.open(data.data.authorization_url, '_blank');
+        
+        toast({
+          title: "Payment Initiated",
+          description: "Complete your payment in the new tab. Check back here after payment.",
+        });
 
-      setTopUpAmount("");
-      fetchProfile();
-      fetchTransactions();
+        setTopUpAmount("");
+      } else {
+        throw new Error(data?.error || "Failed to initialize payment");
+      }
     } catch (error: any) {
       toast({
         title: "Error",
-        description: "Failed to top up wallet",
+        description: error.message || "Failed to initialize payment",
         variant: "destructive",
       });
     } finally {
       setIsTopUpLoading(false);
+    }
+  };
+
+  // Add payment verification function
+  const verifyPayment = async (reference: string) => {
+    try {
+      const { data, error } = await supabase.functions.invoke("paystack-verify", {
+        body: { reference },
+      });
+
+      if (error) throw error;
+
+      if (data?.success) {
+        toast({
+          title: "Payment Successful",
+          description: `₵${data.amount} added to your wallet`,
+        });
+        fetchProfile();
+        fetchTransactions();
+      } else {
+        throw new Error(data?.error || "Payment verification failed");
+      }
+    } catch (error: any) {
+      toast({
+        title: "Payment Verification Failed",
+        description: error.message,
+        variant: "destructive",
+      });
     }
   };
 
