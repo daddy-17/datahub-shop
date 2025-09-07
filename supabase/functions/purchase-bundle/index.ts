@@ -6,6 +6,13 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// Network mapping from our system to DataMart API
+const NETWORK_MAPPING: Record<string, string> = {
+  "yello": "YELLO",
+  "telecel": "TELECEL", 
+  "airteltigo": "AT_PREMIUM",
+};
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
@@ -106,25 +113,70 @@ serve(async (req) => {
       throw new Error("Failed to process payment");
     }
 
-    // TODO: Integrate with DataMart API to actually purchase the bundle
-    // For now, we'll simulate API call and update order status
-    
-    console.log(`Processing data bundle purchase:`, {
-      network: bundle.network,
-      capacity: bundle.capacity,
+    // Get DataMart API network name
+    const datamartNetwork = NETWORK_MAPPING[bundle.network.toLowerCase()];
+    if (!datamartNetwork) {
+      throw new Error(`Unsupported network: ${bundle.network}`);
+    }
+
+    // Extract capacity number from bundle capacity (e.g., "5GB" -> "5")
+    const capacityMatch = bundle.capacity.match(/(\d+)/);
+    const capacity = capacityMatch ? capacityMatch[1] : bundle.capacity;
+
+    console.log(`Purchasing data bundle via DataMart API:`, {
+      network: datamartNetwork,
+      capacity: capacity,
       receiverPhone,
       amount: bundle.price,
     });
 
-    // Simulate API processing delay
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    // Purchase data bundle via DataMart API
+    const datamartResponse = await fetch("https://api.datamartgh.shop/api/developer/purchase", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-API-Key": Deno.env.get("DATAMART_API_KEY") ?? "",
+      },
+      body: JSON.stringify({
+        phoneNumber: receiverPhone,
+        network: datamartNetwork,
+        capacity: capacity,
+        gateway: "wallet",
+      }),
+    });
 
-    // Update order status to processing (in real implementation, this would be done after successful API call)
+    const datamartData = await datamartResponse.json();
+
+    if (!datamartResponse.ok || datamartData.status !== "success") {
+      console.error("DataMart API Error:", datamartData);
+      
+      // Update order status to failed
+      await supabaseService
+        .from("orders")
+        .update({ 
+          status: "failed",
+          transaction_id: `FAILED_${Date.now()}`,
+        })
+        .eq("id", order.id);
+
+      // Refund user wallet
+      await supabaseService.rpc("update_wallet_balance", {
+        p_user_id: user.id,
+        p_amount: bundle.price,
+        p_type: "credit",
+        p_description: `Refund: Failed purchase - ${bundle.capacity} ${bundle.network} data bundle`,
+        p_reference: `REFUND_${order.id}`,
+      });
+
+      throw new Error(datamartData.message || "Data bundle purchase failed");
+    }
+
+    // Update order status to completed with DataMart transaction details
     const { error: updateError } = await supabaseService
       .from("orders")
       .update({ 
-        status: "processing",
-        transaction_id: `TXN_${Date.now()}`,
+        status: "completed",
+        transaction_id: datamartData.data.transactionReference || datamartData.data.purchaseId,
       })
       .eq("id", order.id);
 
@@ -136,7 +188,10 @@ serve(async (req) => {
       JSON.stringify({
         success: true,
         orderId: order.id,
-        message: "Bundle purchase initiated successfully",
+        transactionReference: datamartData.data.transactionReference,
+        purchaseId: datamartData.data.purchaseId,
+        message: "Data bundle purchased successfully",
+        datamartResponse: datamartData.data,
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },

@@ -6,3 +6,5 @@ verify_jwt = false
 [functions.paystack-topup]
 
 [functions.paystack-verify]
+
+[functions.sync-datamart-packages]

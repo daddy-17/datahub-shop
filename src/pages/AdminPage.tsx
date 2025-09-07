@@ -64,6 +64,7 @@ export default function AdminPage() {
     price: "",
     validity: "30 days",
   });
+  const [isSyncLoading, setIsSyncLoading] = useState(false);
   const [editingBundle, setEditingBundle] = useState<DataBundle | null>(null);
 
   if (loading) {
@@ -267,6 +268,33 @@ export default function AdminPage() {
     }
   };
 
+  const handleSyncPackages = async () => {
+    setIsSyncLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("sync-datamart-packages");
+
+      if (error) throw error;
+
+      if (data?.success) {
+        toast({
+          title: "Sync Successful",
+          description: `Synced ${data.synced} new packages, updated ${data.updated} existing packages`,
+        });
+        fetchBundles();
+      } else {
+        throw new Error(data?.error || "Sync failed");
+      }
+    } catch (error: any) {
+      toast({
+        title: "Sync Failed",
+        description: error.message || "Failed to sync packages",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSyncLoading(false);
+    }
+  };
+
   const getStatusBadge = (status: string) => {
     const variants: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
       pending: "outline",
@@ -402,8 +430,20 @@ export default function AdminPage() {
               {/* Bundles List */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Existing Bundles</CardTitle>
-                  <CardDescription>Manage your data bundle offerings</CardDescription>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle>Existing Bundles</CardTitle>
+                      <CardDescription>Manage your data bundle offerings</CardDescription>
+                    </div>
+                    <Button 
+                      onClick={handleSyncPackages} 
+                      disabled={isSyncLoading}
+                      variant="outline"
+                      size="sm"
+                    >
+                      {isSyncLoading ? "Syncing..." : "Sync from DataMart"}
+                    </Button>
+                  </div>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4 max-h-96 overflow-y-auto">
